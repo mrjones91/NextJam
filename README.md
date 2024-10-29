@@ -2,6 +2,10 @@
 
 ![$(Game Title)](screenshots/screenshot000.png "$(Game Title)")
 
+### [Play Now!](https://mrjones91.github.io/NextJam/src/build/raylib_game.html)
+
+Playtest Notes: Game Does Not Exist Yet
+
 ### Description
 
 $(Your Project Description)
