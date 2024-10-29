@@ -26,16 +26,16 @@
 # Define required environment variables
 #------------------------------------------------------------------------------------------------
 # Define target platform: PLATFORM_DESKTOP, PLATFORM_WEB, PLATFORM_DRM, PLATFORM_ANDROID
-PLATFORM              ?= PLATFORM_DESKTOP
+PLATFORM              ?= PLATFORM_WEB
 
 # Define project variables
 PROJECT_NAME          ?= raylib_game
 PROJECT_VERSION       ?= 1.0
-PROJECT_BUILD_PATH    ?= .
+PROJECT_BUILD_PATH    ?= ./build
 PROJECT_SOURCE_FILES  ?= raylib_game.c
 
 # raylib library variables
-RAYLIB_SRC_PATH       ?= C:/raylib/raylib/src
+RAYLIB_SRC_PATH       ?= C:/raylib/raylibWeb/src
 RAYLIB_INCLUDE_PATH   ?= $(RAYLIB_SRC_PATH)
 RAYLIB_LIB_PATH       ?= $(RAYLIB_SRC_PATH)
 
@@ -50,7 +50,7 @@ BUILD_MODE            ?= RELEASE
 
 # PLATFORM_WEB: Default properties
 BUILD_WEB_ASYNCIFY    ?= FALSE
-BUILD_WEB_SHELL       ?= minshell.html
+BUILD_WEB_SHELL       ?= shell.html
 BUILD_WEB_HEAP_SIZE   ?= 128MB
 BUILD_WEB_STACK_SIZE  ?= 1MB
 BUILD_WEB_ASYNCIFY_STACK_SIZE ?= 1048576
@@ -362,7 +362,7 @@ ifeq ($(PLATFORM),PLATFORM_DRM)
 	rm -fv *.o
 endif
 ifeq ($(PLATFORM),PLATFORM_WEB)
-	del *.o *.html *.js
+	rm -f *.o ./build/*.html ./build/*.js ./build/*.data ./build/*.wasm
 endif
 	@echo Cleaning done
 
