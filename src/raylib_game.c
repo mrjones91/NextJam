@@ -44,6 +44,10 @@ typedef enum {
     SCREEN_ENDING
 } GameScreen;
 
+Color rainbow[7] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, VIOLET};
+
+int note = 1;
+
 // TODO: Define your custom data types here
 
 //----------------------------------------------------------------------------------
@@ -60,6 +64,8 @@ static RenderTexture2D target = { 0 };  // Render texture to render our game
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void);      // Update and Draw one frame
+
+static int getNote(int);
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -117,6 +123,14 @@ void UpdateDrawFrame(void)
     // TODO: Update variables / Implement example logic at this point
     //----------------------------------------------------------------------------------
 
+    if (IsKeyDown(KEY_UP)) {
+        getNote(-1);
+    }
+    else if (IsKeyDown(KEY_DOWN)) {
+        getNote(1);
+
+    }
+    
     // Draw
     //----------------------------------------------------------------------------------
     // Render game screen to a texture, 
@@ -127,7 +141,14 @@ void UpdateDrawFrame(void)
         // TODO: Draw your game screen here
         DrawText("Welcome to raylib NEXT gamejam!", 150, 140, 30, BLACK);
         DrawRectangleLinesEx((Rectangle){ 0, 0, screenWidth, screenHeight }, 16, BLACK);
-        
+        TraceLog(1, "Top Color: %i", getNote(0) + 1);
+        TraceLog(1, "Current Color: %i", getNote(0));
+        TraceLog(1, "Bottom Color: %i", getNote(0) - 1);
+        DrawRectangle(0, 2 * (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote(0) - 1]);
+        DrawRectangle(0, (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote(0)]);
+        DrawRectangle(0, 0, screenWidth, screenHeight/3, rainbow[getNote(0) + 1]);
+        DrawCircle(screenWidth/2, screenHeight/2, 40, GRAY);
+
     EndTextureMode();
     
     // Render to screen (main framebuffer)
@@ -141,4 +162,10 @@ void UpdateDrawFrame(void)
 
     EndDrawing();
     //----------------------------------------------------------------------------------  
+}
+
+//get current note
+int getNote(int change) {
+    note += change;
+    return note % 7;
 }
