@@ -44,9 +44,31 @@ typedef enum {
     SCREEN_ENDING
 } GameScreen;
 
-Color rainbow[7] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, VIOLET};
+// typedef enum {
+//     C1,
+//     C2,
+//     C3,
+//     C4,
+//     C5
+// } octaves;
 
-int note = 1;
+int allNotes[5][7];
+/*
+allNotes[0][0] lowest
+allNotes[0][6]
+
+allNotes[5][0] highest
+*/
+// all notes implicit 2D array [5][7]
+//octave[0] rainbow[0] = red and C
+Color rainbow[7] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, VIOLET};
+int octaves[5] = { 0, 1, 2, 3, 4};
+
+int note = 0;
+int octave = 2;
+
+int change = 1; //connector
+
 
 // TODO: Define your custom data types here
 
@@ -65,7 +87,9 @@ static RenderTexture2D target = { 0 };  // Render texture to render our game
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void);      // Update and Draw one frame
 
-static int getNote(int);
+static int getNote(void);
+static int nextNoteUp(int);
+static int nextNoteDown(int);
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -123,14 +147,15 @@ void UpdateDrawFrame(void)
     // TODO: Update variables / Implement example logic at this point
     //----------------------------------------------------------------------------------
 
-    if (IsKeyDown(KEY_UP)) {
-        getNote(-1);
+    if (IsKeyPressed(KEY_UP)) {
+        nextNoteUp(change);
     }
-    else if (IsKeyDown(KEY_DOWN)) {
-        getNote(1);
+    else if (IsKeyPressed(KEY_DOWN)) {
+        if (!(getNote() == 0)) {
+            nextNoteDown(change);
+        }
+    }
 
-    }
-    
     // Draw
     //----------------------------------------------------------------------------------
     // Render game screen to a texture, 
@@ -141,13 +166,13 @@ void UpdateDrawFrame(void)
         // TODO: Draw your game screen here
         DrawText("Welcome to raylib NEXT gamejam!", 150, 140, 30, BLACK);
         DrawRectangleLinesEx((Rectangle){ 0, 0, screenWidth, screenHeight }, 16, BLACK);
-        TraceLog(1, "Top Color: %i", getNote(0) + 1);
-        TraceLog(1, "Current Color: %i", getNote(0));
-        TraceLog(1, "Bottom Color: %i", getNote(0) - 1);
-        DrawRectangle(0, 2 * (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote(0) - 1]);
-        DrawRectangle(0, (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote(0)]);
-        DrawRectangle(0, 0, screenWidth, screenHeight/3, rainbow[getNote(0) + 1]);
-        DrawCircle(screenWidth/2, screenHeight/2, 40, GRAY);
+        TraceLog(1, "Top Color: %i", getNote() + 1);
+        TraceLog(1, "Current Color: %i", getNote());
+        TraceLog(1, "Bottom Color: %i", getNote() - 1);
+        DrawRectangle(0, 0, screenWidth, screenHeight/3, rainbow[nextNoteUp(change) + 1]); //upper note
+        DrawRectangle(0, (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote()]); //current note - middle
+        DrawRectangle(0, 2 * (screenHeight/3), screenWidth, screenHeight/3, rainbow[nextNoteDown(change)]); //lower note
+        DrawCircle(screenWidth/2, screenHeight/2, 40, LIGHTGRAY);
 
     EndTextureMode();
     
@@ -163,9 +188,46 @@ void UpdateDrawFrame(void)
     EndDrawing();
     //----------------------------------------------------------------------------------  
 }
+// void loadNotes() {
+//     for (int i = 0; i < allNotes[1][1].length; i++){
+//         for (int j = 0; j < allNotes)
+//     }
+// }
 
 //get current note
-int getNote(int change) {
-    note += change;
+int getNote() {
     return note % 7;
+}
+
+int nextNoteUp(int change) {
+  //check octave. stop at [4][0]
+  if (octave == 4) {
+    note = 0;
+  } 
+  else if (octave <= 3) {
+    note += change;
+  }
+  //check note. loop 0-6
+  if (note > 6) {
+    note = note % 7;
+    if (octave == 3) {
+        octave = 4;
+    }
+  }
+
+    return note;
+}
+int nextNoteDown(int change) {
+    //check bottom return bottom
+    if (octave == 0) {
+       note = 0;
+    }
+    else {
+        note -= change;
+    }
+    if (note < 0) {
+        note = note + 7;
+    }
+    return note;
+
 }
