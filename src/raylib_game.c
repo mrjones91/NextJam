@@ -129,6 +129,8 @@ void AudioInputCallback(void *buffer, unsigned int frames)
 }
 
 
+
+
 // TODO: Define your custom data types here
 
 //----------------------------------------------------------------------------------
@@ -138,6 +140,10 @@ static const int screenWidth = 800;
 static const int screenHeight = 450;
 
 static RenderTexture2D target = { 0 };  // Render texture to render our game
+
+Vector2 touchPosition = { 0, 0 };
+Rectangle touchArea = { 0, 0, screenWidth, screenHeight};
+
 
 // TODO: Define global variables here, recommended to make them static
 
@@ -240,11 +246,11 @@ void UpdateDrawFrame(void)
             ResumeAudioStream(stream);
         }
     }
-    if (IsKeyPressed(KEY_UP)) {
+    if (IsKeyPressed(KEY_UP) || (CheckCollisionPointRec(touchPosition, touchArea) && (GetGestureDetected() == GESTURE_SWIPE_DOWN)) ) {
        note = moveUp(change[currentChange]);
        //(int)(frequency * 2) ^ (change[currentChange] / 12);
     }
-    else if (IsKeyPressed(KEY_DOWN)) {
+    else if (IsKeyPressed(KEY_DOWN) || (CheckCollisionPointRec(touchPosition, touchArea) && (GetGestureDetected() == GESTURE_SWIPE_UP)) ) {
         note = moveDown(change[currentChange]);
         //frequency = frequency / 1.059463f;//(int)(frequency * 2) ^ (-1 * change[currentChange] / 12);
     }
