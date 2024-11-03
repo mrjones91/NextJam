@@ -19,8 +19,9 @@
 #endif
 
 #include <stdio.h>                          // Required for: printf()
-#include <stdlib.h>                         // Required for: 
-#include <string.h>                         // Required for: 
+#include <stdlib.h>                         // Required for: malloc(), free()
+#include <string.h>                         // Required for: memcpy()
+#include <math.h>           // Required for: sinf()
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -44,16 +45,8 @@ typedef enum {
     SCREEN_ENDING
 } GameScreen;
 
-// typedef enum {
-//     C1,
-//     C2,
-//     C3,
-//     C4,
-//     C5
-// } octaves;
-
-int allNotes[5][7];
 /*
+int allNotes[5][7];
 allNotes[0][0] lowest
 allNotes[0][6]
 
@@ -62,9 +55,32 @@ allNotes[5][0] highest
 // all notes implicit 2D array [5][7]
 //octave[0] rainbow[0] = red and C
 
-// typedef enum{
-//     rainbow,
-// } octaves;
+//scales
+//a scale sets what seven notes are playable
+//gonna stick to plain c scale -
+//notes
+//
+/*
+//calculate percentage based on change[currentChange]
+        //2 step - 1.122462f || change = 1
+        if (nextUp == 1 || nextUp == 2 || nextUp == 4 || nextUp == 5 || nextUp == 6){
+            frequency = frequency * 1.122462f;
+        } else {
+            frequency = frequency * 1.059463f;
+        }
+
+        if (nextDown == 0 || nextDown == 1 || nextDown == 3 || nextDown == 4 || nextDown == 5){
+            frequency = frequency / (change[currentChange] + nextDown * 1.059463f);
+        } else {
+            frequency = frequency / 1.059463f;
+        }
+
+        //change = 2 * 1.122462f
+        //change = 3 * 1.122462f
+        //change = 4 
+        //change = 7
+*/
+
 
 Color rainbow[7] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, VIOLET};
 int octaves[5] = { 0, 1, 2, 3, 4};
@@ -75,6 +91,42 @@ int note = 0;
 int octave = 2;
 
 int currentChange = 0; //connector
+
+int tune[8]; //play should stack notes played here...
+
+#define MAX_SAMPLES               512
+#define MAX_SAMPLES_PER_UPDATE   4096
+
+// Cycles per second (hz)
+float frequency = 262.0f;
+
+// Audio frequency, for smoothing
+float audioFrequency = 262.0f;
+
+// Previous value, used to test if sine needs to be rewritten, and to smoothly modulate frequency
+float oldFrequency = 1.0f;
+
+// Index for audio rendering
+float sineIdx = 0.0f;
+
+// Init raw audio stream (sample rate: 44100, sample size: 16bit-short, channels: 1-mono)
+AudioStream stream;
+
+// Audio input processing callback
+void AudioInputCallback(void *buffer, unsigned int frames)
+{
+    audioFrequency = frequency + (audioFrequency - frequency)*0.95f;
+
+    float incr = audioFrequency/44100.0f;
+    short *d = (short *)buffer;
+
+    for (unsigned int i = 0; i < frames; i++)
+    {
+        d[i] = (short)(32000.0f*sinf(2*PI*sineIdx));
+        sineIdx += incr;
+        if (sineIdx > 1.0f) sineIdx -= 1.0f;
+    }
+}
 
 
 // TODO: Define your custom data types here
@@ -113,6 +165,22 @@ int main(void)
     //--------------------------------------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "raylib gamejam template");
     
+    InitAudioDevice();              // Initialize audio device
+
+    SetAudioStreamBufferSizeDefault(MAX_SAMPLES_PER_UPDATE);
+
+    // Init raw audio stream (sample rate: 44100, sample size: 16bit-short, channels: 1-mono)
+    stream = LoadAudioStream(44100, 16, 1);
+
+    SetAudioStreamCallback(stream, AudioInputCallback);
+
+    // Buffer for the single cycle waveform we are synthesizing
+    short *data = (short *)malloc(sizeof(short)*MAX_SAMPLES);
+
+    // Frame buffer, describing the waveform when repeated over the course of a frame
+    short *writeBuf = (short *)malloc(sizeof(short)*MAX_SAMPLES_PER_UPDATE);
+
+    PlayAudioStream(stream);        // Start processing stream buffer (no data loaded currently)
     // TODO: Load resources / Initialize variables at this point
     
     // Render texture to draw full screen, enables screen scaling
@@ -136,6 +204,11 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     UnloadRenderTexture(target);
+    free(data);                 // Unload sine wave data
+    free(writeBuf);             // Unload write buffer
+
+    UnloadAudioStream(stream);   // Close raw audio stream and delete buffers from RAM
+    CloseAudioDevice();         // Close audio device (music streaming is automatically stopped)
     
     // TODO: Unload all loaded resources at this point
 
@@ -156,11 +229,20 @@ void UpdateDrawFrame(void)
     // TODO: Update variables / Implement example logic at this point
     //----------------------------------------------------------------------------------
 
+    if (IsKeyPressed(KEY_SPACE)){
+        if (IsAudioStreamPlaying(stream)) {
+            PauseAudioStream(stream);
+        } else {
+            ResumeAudioStream(stream);
+        }
+    }
     if (IsKeyPressed(KEY_UP)) {
        note = moveUp(change[currentChange]);
+       //(int)(frequency * 2) ^ (change[currentChange] / 12);
     }
     else if (IsKeyPressed(KEY_DOWN)) {
         note = moveDown(change[currentChange]);
+        //frequency = frequency / 1.059463f;//(int)(frequency * 2) ^ (-1 * change[currentChange] / 12);
     }
 
     if (IsKeyPressed(KEY_RIGHT)) {
@@ -192,8 +274,8 @@ void UpdateDrawFrame(void)
 
         //DrawText("Welcome to raylib NEXT gamejam!", 150, 140, 30, BLACK);
         
-        char displayText[50];// = "Note: &s, Octave: %i" + player.position.x;
-        sprintf(displayText, "Note: %i, Octave: %i, Change: %i", note, octave, change[currentChange]);
+        char displayText[70];// = "Note: &s, Octave: %i" + player.position.x;
+        sprintf(displayText, "Note: %i, Octave: %i, Change: %i, Frequency: %f", note, octave, change[currentChange], frequency);
         DrawText(displayText, 20, 160, 10, BLACK);
         
     EndTextureMode();
@@ -230,7 +312,7 @@ int getNote(int diff) {
 
 int moveUp(int change) {
     int nextUp = note + change;
-
+    int fc = 1;
     if (nextUp > 6) {
         if (octave < 4){
             octave += 1;
@@ -239,6 +321,17 @@ int moveUp(int change) {
         }
         nextUp = nextUp % 7;
     }
+    if (!(note == 6 && octave == 4)) {
+        //calculate percentage based on change[currentChange]
+        //2 step - 1.122462f
+        if (nextUp == 1 || nextUp == 2 || nextUp == 4 || nextUp == 5 || nextUp == 6){
+            fc += change - 1;//frequency = frequency * 1.122462f;
+        } else {
+            fc += 1;
+            //frequency = frequency * 1.059463f;
+        }
+        frequency = frequency * (.059463f * fc + 1);
+    }
     return nextUp;
 }
 int nextNoteUp(int change) {
@@ -246,6 +339,7 @@ int nextNoteUp(int change) {
 }
 int moveDown(int change) {
     //check bottom return bottom
+    int fc = 1;
     int nextDown = note - change;
     if (nextDown < 0) {
         if (octave > 0){
@@ -254,6 +348,19 @@ int moveDown(int change) {
             nextDown = 0;
         }
         nextDown = (nextDown + 7) % 7;
+    }
+    //frequency * (change * .06 + 1)
+    //frequency / (change * .06 + 1)
+    if (!(note == 0 && octave == 0)) {
+        if (nextDown == 0 || nextDown == 1 || nextDown == 3 || nextDown == 4 || nextDown == 5){
+            //if change > 1 , change += change - 1?
+            fc += change - 1;
+            //frequency = frequency / 1.122462f;
+        } else {
+            fc += 1;
+            //frequency = frequency / 1.059463f;
+        }
+            frequency = frequency / (.059463f * fc + 1);
     }
     return nextDown;
 }
