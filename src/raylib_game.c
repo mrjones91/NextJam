@@ -61,13 +61,20 @@ allNotes[5][0] highest
 */
 // all notes implicit 2D array [5][7]
 //octave[0] rainbow[0] = red and C
+
+// typedef enum{
+//     rainbow,
+// } octaves;
+
 Color rainbow[7] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, VIOLET};
 int octaves[5] = { 0, 1, 2, 3, 4};
+int change[5] = {1, 2, 3, 4, 7};
+
 
 int note = 0;
 int octave = 2;
 
-int change = 1; //connector
+int currentChange = 0; //connector
 
 
 // TODO: Define your custom data types here
@@ -87,8 +94,10 @@ static RenderTexture2D target = { 0 };  // Render texture to render our game
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void);      // Update and Draw one frame
 
-static int getNote(void);
+static int getNote(int);
+static int moveUp(int);
 static int nextNoteUp(int);
+static int moveDown(int);
 static int nextNoteDown(int);
 
 //------------------------------------------------------------------------------------
@@ -148,11 +157,21 @@ void UpdateDrawFrame(void)
     //----------------------------------------------------------------------------------
 
     if (IsKeyPressed(KEY_UP)) {
-        nextNoteUp(change);
+       note = moveUp(change[currentChange]);
     }
     else if (IsKeyPressed(KEY_DOWN)) {
-        if (!(getNote() == 0)) {
-            nextNoteDown(change);
+        note = moveDown(change[currentChange]);
+    }
+
+    if (IsKeyPressed(KEY_RIGHT)) {
+        if (currentChange < (int) ( sizeof(change) / sizeof(change[0]) ) ) {
+            currentChange += 1;
+        }
+    }
+
+    if (IsKeyPressed(KEY_LEFT)) {
+        if (currentChange > 0) {
+            currentChange -= 1;
         }
     }
 
@@ -164,16 +183,19 @@ void UpdateDrawFrame(void)
         ClearBackground(RAYWHITE);
         
         // TODO: Draw your game screen here
-        DrawText("Welcome to raylib NEXT gamejam!", 150, 140, 30, BLACK);
         DrawRectangleLinesEx((Rectangle){ 0, 0, screenWidth, screenHeight }, 16, BLACK);
-        TraceLog(1, "Top Color: %i", getNote() + 1);
-        TraceLog(1, "Current Color: %i", getNote());
-        TraceLog(1, "Bottom Color: %i", getNote() - 1);
-        DrawRectangle(0, 0, screenWidth, screenHeight/3, rainbow[nextNoteUp(change) + 1]); //upper note
-        DrawRectangle(0, (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote()]); //current note - middle
-        DrawRectangle(0, 2 * (screenHeight/3), screenWidth, screenHeight/3, rainbow[nextNoteDown(change)]); //lower note
+    
+        DrawRectangle(0, 0, screenWidth, screenHeight/3, rainbow[nextNoteUp(change[currentChange])]); //upper note
+        DrawRectangle(0, (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote(0)]); //current note - middle
+        DrawRectangle(0, 2 * (screenHeight/3), screenWidth, screenHeight/3, rainbow[nextNoteDown(change[currentChange])]); //lower note
         DrawCircle(screenWidth/2, screenHeight/2, 40, LIGHTGRAY);
 
+        //DrawText("Welcome to raylib NEXT gamejam!", 150, 140, 30, BLACK);
+        
+        char displayText[50];// = "Note: &s, Octave: %i" + player.position.x;
+        sprintf(displayText, "Note: %i, Octave: %i, Change: %i", note, octave, change[currentChange]);
+        DrawText(displayText, 20, 160, 10, BLACK);
+        
     EndTextureMode();
     
     // Render to screen (main framebuffer)
@@ -195,39 +217,46 @@ void UpdateDrawFrame(void)
 // }
 
 //get current note
-int getNote() {
-    return note % 7;
+int getNote(int diff) {
+    if (diff > 0) {
+        return note + diff % 7;
+
+    } else if (diff < 0) {
+        return note + diff + 7;
+    } else {
+        return note;
+    }
 }
 
-int nextNoteUp(int change) {
-  //check octave. stop at [4][0]
-  if (octave == 4) {
-    note = 0;
-  } 
-  else if (octave <= 3) {
-    note += change;
-  }
-  //check note. loop 0-6
-  if (note > 6) {
-    note = note % 7;
-    if (octave == 3) {
-        octave = 4;
-    }
-  }
+int moveUp(int change) {
+    int nextUp = note + change;
 
-    return note;
+    if (nextUp > 6) {
+        if (octave < 4){
+            octave += 1;
+        } else if (octave == 4) {
+            nextUp = 6;
+        }
+        nextUp = nextUp % 7;
+    }
+    return nextUp;
+}
+int nextNoteUp(int change) {
+    return (note + change) % 7;
+}
+int moveDown(int change) {
+    //check bottom return bottom
+    int nextDown = note - change;
+    if (nextDown < 0) {
+        if (octave > 0){
+            octave -= 1;
+        } else if (octave == 0) {
+            nextDown = 0;
+        }
+        nextDown = (nextDown + 7) % 7;
+    }
+    return nextDown;
 }
 int nextNoteDown(int change) {
-    //check bottom return bottom
-    if (octave == 0) {
-       note = 0;
-    }
-    else {
-        note -= change;
-    }
-    if (note < 0) {
-        note = note + 7;
-    }
-    return note;
-
+    return ((note - change) + 7) % 7;
 }
