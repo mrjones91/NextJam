@@ -36,7 +36,11 @@ Keyboard/Touchscreen
 
 ### Screenshots
 
+#### Web View
+
 ![Chordination](screenshots/Fourths.png "Screenshot")
+
+#### Game Screen Closeup
 
 ![Chordination](screenshots/MiddleC.png "Screenshot")
 
