@@ -49,6 +49,15 @@ Keyboard/Touchscreen
 
  - itch.io Release: https://dij.itch.io/chordination
 
+
+### Thanks
+
+- [Wikipedia: Piano Key Frequencies](https://en.wikipedia.org/wiki/Piano_key_frequencies)
+
+- ![Wikipedia](screenshots/769px-Piano_key_frequencies.png "Wikipedia Note Frequencies")
+
+- [Note Frequencies](https://web.archive.org/web/20191216163453/https://pages.mtu.edu/~suits/notefreqs.html)
+
 ### License
 
 This project sources are licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.
