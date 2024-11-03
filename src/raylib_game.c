@@ -45,8 +45,8 @@ typedef enum {
     SCREEN_ENDING
 } GameScreen;
 
+float allNotes[5][7];
 /*
-int allNotes[5][7];
 allNotes[0][0] lowest
 allNotes[0][6]
 
@@ -98,7 +98,7 @@ int tune[8]; //play should stack notes played here...
 #define MAX_SAMPLES_PER_UPDATE   4096
 
 // Cycles per second (hz)
-float frequency = 262.0f;
+float frequency = 61.74f;
 
 // Audio frequency, for smoothing
 float audioFrequency = 262.0f;
@@ -146,6 +146,8 @@ static RenderTexture2D target = { 0 };  // Render texture to render our game
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void);      // Update and Draw one frame
 
+static void loadNotes(void);
+
 static int getNote(int);
 static int moveUp(int);
 static int nextNoteUp(int);
@@ -165,6 +167,8 @@ int main(void)
     //--------------------------------------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "raylib gamejam template");
     
+    loadNotes(); //init all note values
+
     InitAudioDevice();              // Initialize audio device
 
     SetAudioStreamBufferSizeDefault(MAX_SAMPLES_PER_UPDATE);
@@ -298,6 +302,22 @@ void UpdateDrawFrame(void)
 //     }
 // }
 
+void loadNotes() {
+    for (int o = 0; o < 5; o++) {
+        for (int n = 0; n < 7; n++) {
+
+            if (n == 0 || n == 3) {
+                frequency *= 1.059463f;
+            } else {
+                frequency *= 1.122462f;
+            }
+            
+            allNotes[o][n] = frequency;
+        }
+    }
+    
+}
+
 //get current note
 int getNote(int diff) {
     if (diff > 0) {
@@ -312,7 +332,7 @@ int getNote(int diff) {
 
 int moveUp(int change) {
     int nextUp = note + change;
-    int fc = 1;
+    //int fc = 1;
     if (nextUp > 6) {
         if (octave < 4){
             octave += 1;
@@ -322,15 +342,15 @@ int moveUp(int change) {
         nextUp = nextUp % 7;
     }
     if (!(note == 6 && octave == 4)) {
-        //calculate percentage based on change[currentChange]
-        //2 step - 1.122462f
-        if (nextUp == 1 || nextUp == 2 || nextUp == 4 || nextUp == 5 || nextUp == 6){
-            fc += change - 1;//frequency = frequency * 1.122462f;
-        } else {
-            fc += 1;
-            //frequency = frequency * 1.059463f;
-        }
-        frequency = frequency * (.059463f * fc + 1);
+        // //calculate percentage based on change[currentChange]
+        // //2 step - 1.122462f
+        // if (nextUp == 1 || nextUp == 2 || nextUp == 4 || nextUp == 5 || nextUp == 6){
+        //     fc += change - 1;//frequency = frequency * 1.122462f;
+        // } else {
+        //     fc += 1;
+        //     //frequency = frequency * 1.059463f;
+        // }
+        frequency = allNotes[octave][note];
     }
     return nextUp;
 }
@@ -339,7 +359,7 @@ int nextNoteUp(int change) {
 }
 int moveDown(int change) {
     //check bottom return bottom
-    int fc = 1;
+    //int fc = 1;
     int nextDown = note - change;
     if (nextDown < 0) {
         if (octave > 0){
@@ -352,15 +372,16 @@ int moveDown(int change) {
     //frequency * (change * .06 + 1)
     //frequency / (change * .06 + 1)
     if (!(note == 0 && octave == 0)) {
-        if (nextDown == 0 || nextDown == 1 || nextDown == 3 || nextDown == 4 || nextDown == 5){
-            //if change > 1 , change += change - 1?
-            fc += change - 1;
-            //frequency = frequency / 1.122462f;
-        } else {
-            fc += 1;
-            //frequency = frequency / 1.059463f;
-        }
-            frequency = frequency / (.059463f * fc + 1);
+        // if (nextDown == 0 || nextDown == 1 || nextDown == 3 || nextDown == 4 || nextDown == 5){
+        //     //if change > 1 , change += change - 1?
+        //     fc += change - 1;
+        //     //frequency = frequency / 1.122462f;
+        // } else {
+        //     fc += 1;
+        //     //frequency = frequency / 1.059463f;
+        // }
+        frequency = allNotes[octave][note];
+        //frequency = frequency / (.059463f * fc + 1);
     }
     return nextDown;
 }
