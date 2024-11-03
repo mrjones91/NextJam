@@ -175,6 +175,8 @@ int main(void)
     
     loadNotes(); //init all note values
 
+    frequency = allNotes[octave][note];
+
     InitAudioDevice();              // Initialize audio device
 
     SetAudioStreamBufferSizeDefault(MAX_SAMPLES_PER_UPDATE);
@@ -239,18 +241,18 @@ void UpdateDrawFrame(void)
     // TODO: Update variables / Implement example logic at this point
     //----------------------------------------------------------------------------------
 
-    if (IsKeyPressed(KEY_SPACE)){
+    if (IsKeyPressed(KEY_SPACE) || (GetGestureDetected() == GESTURE_TAP)){
         if (IsAudioStreamPlaying(stream)) {
             PauseAudioStream(stream);
         } else {
             ResumeAudioStream(stream);
         }
     }
-    if (IsKeyPressed(KEY_UP) || (CheckCollisionPointRec(touchPosition, touchArea) && (GetGestureDetected() == GESTURE_SWIPE_DOWN)) ) {
+    if (IsKeyPressed(KEY_UP) || (GetGestureDetected() == GESTURE_SWIPE_DOWN))  {
        note = moveUp(change[currentChange]);
        //(int)(frequency * 2) ^ (change[currentChange] / 12);
     }
-    else if (IsKeyPressed(KEY_DOWN) || (CheckCollisionPointRec(touchPosition, touchArea) && (GetGestureDetected() == GESTURE_SWIPE_UP)) ) {
+    else if (IsKeyPressed(KEY_DOWN) || (GetGestureDetected() == GESTURE_SWIPE_UP))  {
         note = moveDown(change[currentChange]);
         //frequency = frequency / 1.059463f;//(int)(frequency * 2) ^ (-1 * change[currentChange] / 12);
     }
@@ -284,9 +286,25 @@ void UpdateDrawFrame(void)
 
         //DrawText("Welcome to raylib NEXT gamejam!", 150, 140, 30, BLACK);
         
-        char displayText[70];// = "Note: &s, Octave: %i" + player.position.x;
-        sprintf(displayText, "Note: %i, Octave: %i, Change: %i, Frequency: %f", note, octave, change[currentChange], frequency);
-        DrawText(displayText, 20, 160, 10, BLACK);
+        char displayText1[50];// = "Note: &s, Octave: %i" + player.position.x;
+        char displayText2[30];// = "Note: &s, Octave: %i" + player.position.x;
+        char displayText3[30];// = "Note: &s, Octave: %i" + player.position.x;
+        char displayText4[40];// = "Note: &s, Octave: %i" + player.position.x;
+        char displayText5[40];// = "Note: &s, Octave: %i" + player.position.x;
+        sprintf(displayText1, "Note: %i, Octave: %i", note, octave);
+        sprintf(displayText2, "Change: %i,", change[currentChange]);
+        sprintf(displayText3, "Frequency: %f", frequency);
+        sprintf(displayText4, "Scale: C Major");
+        DrawText(displayText1, 20, 160, 15, rainbow[nextNoteUp(change[2])]);
+        DrawText(displayText2, 20, 180, 15, rainbow[nextNoteUp(change[2])]);
+        DrawText(displayText3, 20, 200, 15, rainbow[nextNoteUp(change[2])]);
+        DrawText(displayText4, 20, 220, 15, rainbow[nextNoteUp(change[2])]);
+        if (IsAudioStreamPlaying(stream)){
+            sprintf(displayText5, "TAP or Press SPACE to PAUSE Audio");
+        } else {
+            sprintf(displayText5, "TAP or Press SPACE to Resume Audio");
+        }
+        DrawText(displayText5, 20, 240, 15, rainbow[nextNoteUp(change[2])]);
         
     EndTextureMode();
     
@@ -309,16 +327,18 @@ void UpdateDrawFrame(void)
 // }
 
 void loadNotes() {
+    float tempFreq = frequency;
+
     for (int o = 0; o < 5; o++) {
         for (int n = 0; n < 7; n++) {
 
             if (n == 0 || n == 3) {
-                frequency *= 1.059463f;
+                tempFreq *= 1.059463f;
             } else {
-                frequency *= 1.122462f;
+                tempFreq *= 1.122462f;
             }
             
-            allNotes[o][n] = frequency;
+            allNotes[o][n] = tempFreq;
         }
     }
     
