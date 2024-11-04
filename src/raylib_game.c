@@ -82,7 +82,9 @@ allNotes[5][0] highest
 */
 
 
-Color rainbow[7] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, VIOLET};
+Color rainbow[7] = {(Color){230, 41,55, 200}, (Color){255, 161, 0, 200}, (Color){253, 249, 0, 200}, (Color){0, 228, 48, 200}, (Color){0, 121,241, 200}, (Color){200, 122, 255, 200}, (Color){135, 60, 190, 200}};
+Color rainbows[7] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, VIOLET};
+char notes[7] = { 'C', 'D', 'E', 'F', 'G', 'A', 'B'};
 int octaves[5] = { 0, 1, 2, 3, 4};
 int change[5] = {1, 2, 3, 4, 7};
 
@@ -144,6 +146,8 @@ static RenderTexture2D target = { 0 };  // Render texture to render our game
 Vector2 touchPosition = { 0, 0 };
 Rectangle touchArea = { 0, 0, screenWidth, screenHeight};
 
+Font font1;
+
 
 // TODO: Define global variables here, recommended to make them static
 
@@ -192,7 +196,9 @@ int main(void)
     // Frame buffer, describing the waveform when repeated over the course of a frame
     short *writeBuf = (short *)malloc(sizeof(short)*MAX_SAMPLES_PER_UPDATE);
 
-    PlayAudioStream(stream);        // Start processing stream buffer (no data loaded currently)
+    PlayAudioStream(stream);        // Start processing stream buffer (no data loaded currently) 
+
+    font1 = LoadFont("resources/alpha_beta.png");
     // TODO: Load resources / Initialize variables at this point
     
     // Render texture to draw full screen, enables screen scaling
@@ -258,7 +264,7 @@ void UpdateDrawFrame(void)
     }
 
     if (IsKeyPressed(KEY_RIGHT)) {
-        if (currentChange < (int) ( sizeof(change) / sizeof(change[0]) ) ) {
+        if (currentChange < (int) ( sizeof(change) / sizeof(change[0]) ) - 1 ) {
             currentChange += 1;
         }
     }
@@ -277,12 +283,12 @@ void UpdateDrawFrame(void)
         ClearBackground(RAYWHITE);
         
         // TODO: Draw your game screen here
-        DrawRectangleLinesEx((Rectangle){ 0, 0, screenWidth, screenHeight }, 16, BLACK);
+        //DrawRectangleLinesEx((Rectangle){ 0, 0, screenWidth, screenHeight }, 16, DARKGRAY);
     
         DrawRectangle(0, 0, screenWidth, screenHeight/3, rainbow[nextNoteUp(change[currentChange])]); //upper note
         DrawRectangle(0, (screenHeight/3), screenWidth, screenHeight/3, rainbow[getNote(0)]); //current note - middle
         DrawRectangle(0, 2 * (screenHeight/3), screenWidth, screenHeight/3, rainbow[nextNoteDown(change[currentChange])]); //lower note
-        DrawCircle(screenWidth/2, screenHeight/2, 40, LIGHTGRAY);
+        DrawCircle(screenWidth/2, screenHeight/2, 40, DARKGRAY);
 
         //DrawText("Welcome to raylib NEXT gamejam!", 150, 140, 30, BLACK);
         
@@ -291,20 +297,27 @@ void UpdateDrawFrame(void)
         char displayText3[30];// = "Note: &s, Octave: %i" + player.position.x;
         char displayText4[40];// = "Note: &s, Octave: %i" + player.position.x;
         char displayText5[40];// = "Note: &s, Octave: %i" + player.position.x;
-        sprintf(displayText1, "Note: %i, Octave: %i", note, octave);
+        sprintf(displayText1, "Note Name: %c, Octave: %i, Note #: %i", notes[note], octave, note);
         sprintf(displayText2, "Change: %i,", change[currentChange]);
         sprintf(displayText3, "Frequency: %f", frequency);
         sprintf(displayText4, "Scale: C Major");
-        DrawText(displayText1, 20, 160, 15, rainbow[nextNoteUp(change[2])]);
-        DrawText(displayText2, 20, 180, 15, rainbow[nextNoteUp(change[2])]);
-        DrawText(displayText3, 20, 200, 15, rainbow[nextNoteUp(change[2])]);
-        DrawText(displayText4, 20, 220, 15, rainbow[nextNoteUp(change[2])]);
+
+        // DrawRectangle(15, 150, 290, 110, DARKGRAY);
+        // DrawText(displayText1, 20, 160, 15, rainbow[nextNoteUp(change[2])]);
+        // DrawText(displayText2, 20, 180, 15, rainbow[nextNoteUp(change[2])]);
+        // DrawText(displayText3, 20, 200, 15, rainbow[nextNoteUp(change[2])]);
+        // DrawText(displayText4, 20, 220, 15, rainbow[nextNoteUp(change[2])]);
         if (IsAudioStreamPlaying(stream)){
             sprintf(displayText5, "TAP or Press SPACE to PAUSE Audio");
         } else {
             sprintf(displayText5, "TAP or Press SPACE to Resume Audio");
         }
-        DrawText(displayText5, 20, 240, 15, rainbow[nextNoteUp(change[2])]);
+        //DrawText(displayText5, 20, 240, 15, rainbow[nextNoteUp(change[2])]);
+        DrawTextEx(font1, displayText1, (Vector2){ 20, 160}, (float)font1.baseSize * 1.5, 2, DARKGRAY);
+        DrawTextEx(font1, displayText2, (Vector2){ 20, 180}, (float)font1.baseSize * 1.5, 2, DARKGRAY);
+        DrawTextEx(font1, displayText3, (Vector2){ 20, 200}, (float)font1.baseSize * 1.5, 2, DARKGRAY);
+        DrawTextEx(font1, displayText4, (Vector2){ 20, 220}, (float)font1.baseSize * 1.5, 2, DARKGRAY);
+        DrawTextEx(font1, displayText5, (Vector2){ 20, 240}, (float)font1.baseSize * 1.5, 2, DARKGRAY);
         
     EndTextureMode();
     
