@@ -1,4 +1,4 @@
-# Chordination
+# Chordination - Update
 
 ![Chordination](screenshots/chordination.png "Chordination")
 
